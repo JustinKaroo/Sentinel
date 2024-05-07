@@ -1,0 +1,43 @@
+//VERSION=3
+
+// Configurable parameters for vegetation categories cutoffs
+// Values 100x their actual size for intuitive understanding
+// These values will be scaled down by 100 in the code
+// As you INCREASE the number the proportion of a) will increase and b) will decrease
+const CUTOFF_TREES_HIGHLY_VEGETATED = -1; // Cutoff between a) Trees and b) Highly Vegetated (about -1)
+const CUTOFF_HIGHLY_MODERATELY_VEGETATED = 3.0; // Cutoff between a) Highly Vegetated and b) Moderately Vegetated (about 1 in wetter areas to 4 in drier areas)
+const CUTOFF_MODERATELY_LIGHTLY_VEGETATED = 6.0; // Cutoff between a) Moderately Vegetated and b) Lightly Vegetated (about 4 in wetter areas and 9 in drier areas)
+const CUTOFF_LIGHTLY_BARE = 12; // Cutoff between a) Lightly Vegetated and b) Bare (about 9 in wetter areas and 15 in drier areas)
+
+const MAX_VALUE_BARE = 500; // Fixed maximum value for Bare (Category 4), entered as 500, representing 5
+
+function setup() {
+  return {
+    input: ["B04", "B03"], // Red (B04) and Green (B03) bands
+    output: { bands: 3 } // Output three bands for RGB representation
+  };
+}
+
+function evaluatePixel(sample) {
+  // Calculate ExRI
+  var ExRI = 1.4 * (sample.B04 - sample.B03);
+ 
+  // Initialize the output RGB values to black, representing Trees, etc.
+  var output_color = [0, 0, 0]; // Default for Trees, etc.
+  
+  // Determine output color based on ExRI value and scaled-down cutoffs
+  if (ExRI < CUTOFF_TREES_HIGHLY_VEGETATED / 100) {
+    output_color = [0, 0, 0]; // Black for Trees, etc.
+  } else if (ExRI >= CUTOFF_TREES_HIGHLY_VEGETATED / 100 && ExRI < CUTOFF_HIGHLY_MODERATELY_VEGETATED / 100) {
+    output_color = [0, 0, 255]; // Blue for Highly Vegetated
+  } else if (ExRI >= CUTOFF_HIGHLY_MODERATELY_VEGETATED / 100 && ExRI < CUTOFF_MODERATELY_LIGHTLY_VEGETATED / 100) {
+    output_color = [0, 255, 0]; // Green for Moderately Vegetated
+  } else if (ExRI >= CUTOFF_MODERATELY_LIGHTLY_VEGETATED / 100 && ExRI < CUTOFF_LIGHTLY_BARE / 100) {
+    output_color = [255, 255, 0]; // Yellow for Lightly Vegetated
+  } else if (ExRI >= CUTOFF_LIGHTLY_BARE / 100 && ExRI <= MAX_VALUE_BARE / 100) {
+    output_color = [255, 0, 0]; // Red for Bare
+  }
+  
+  // Return the RGB color as the output bands
+  return output_color;
+}
